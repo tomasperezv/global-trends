@@ -5,7 +5,7 @@ Real time display and filter tweets in a world map, it uses the Google predictio
   Backend: Node.js application
    - Retrieve tweets from the Twitter API
    - Apply the user defined filters + Google prediction API
-   - It uses tomasperezv/blackbriar as MVC engine, but it could be easily adapted to others.
+   - It uses http://github.com/tomasperezv/blackbriar as MVC engine, but it could be easily adapted to others.
 
   Frontend: Javascript
    - Google maps API
