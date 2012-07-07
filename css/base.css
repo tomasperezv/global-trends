@@ -1,0 +1,25 @@
+body {
+}
+
+#map {
+	width: 100%;
+	height:100%;
+	position:absolute;
+	top:60px;
+	bottom:0px;
+}
+
+.infowindow {
+	font-size:15px;
+	background-color: #ffffff;
+	font-family: Arial,Helvetica,Sans Serif;
+	font-weight: bold;
+	text-align: center;
+	min-width: 100px;
+	width: 200px;
+	opacity:0.8;
+}
+
+#filters {
+	width: 400px;
+}
