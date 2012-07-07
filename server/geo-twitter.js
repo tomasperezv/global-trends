@@ -46,25 +46,32 @@ this._formatFilters = function(filters) {
 
 /**
  * Return tweets based on the filters, asking to the Twitter Search API.
+ * @see https://dev.twitter.com/docs/api/1/get/search
  * @param {Function} callback
  * @param {Object} filters
  */
-this._getTweets = function(callback, filters) {
+this._getTweets = function(callback, filters, page) {
 
 	var options = {
 		host: this._getTwitterSearchHost(),
 		port: 80,
-		path: '/search.json?' + this._formatFilters(filters) + '&rpp=' + this.config['twitter-max-tweets'],
-		method: 'GET'
+		path: '/search.json?' + this._formatFilters(filters) + '&rpp=' + this.config['twitter-max-tweets'] + '&page=' + page,
+		method: 'POST'
 	};
 
 	console.log('Asking to the Twitter Search API: ' + options.path);
 
 	var req = http.request(options, function(res) {
+		var output = '';
 		res.setEncoding('utf8');
-		res.on('data', function (data) {
-			console.log('Successful request to Twitter Search API:' + res.statusCode);
-			callback(data);
+
+		res.on('data', function (chunk) {
+			output += chunk;
+		});
+
+		res.on('end', function() {
+			console.log('Successful request to Twitter Search API:' + res.statusCode + ' ' + output.length + ' bytes');
+			callback(output);
 		});
 	});
 
@@ -82,10 +89,13 @@ this._getTweets = function(callback, filters) {
  * @param {Object} params
  */
 this.filterTweets = function(callback, params) {
-	// TODO: build the filters object based on the params
+	var type = this.AND;
+	if (params.type_and == 'false') {
+		type = this.OR;
+	}
 	var filters = {
-		'data': ["blue", "cake"],
-		'type': this.AND
+		'data': params.filters.split(' '),
+		'type': type
 	};
-	this._getTweets(callback, filters);
+	this._getTweets(callback, filters, params.page);
 };
