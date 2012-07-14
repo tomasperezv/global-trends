@@ -114,8 +114,10 @@ var GeoTwitterClient = {
 	 */
 	_renderMap: function() {
 		if (this.map === null) {
-			this.map = new SimpleGoogleMaps({zoom:5});
-			this.map.render(DOM.get('map'));
+			this.map = new SimpleGoogleMaps.Map({
+				div: DOM.get('map'),
+				zoom: 5
+			});
 		}
 		this._centerMap();
 	},
@@ -139,19 +141,16 @@ var GeoTwitterClient = {
 	/**
 	 * @param {Array} locationData
 	 */
-	_renderLocation: function(locationData, id) {
+	_renderLocation: function(locationData) {
 		if (this.map !== null) {
 
 			// Creates the marker, based on the location data
 			var position = this.map.getPosition(locationData[1], locationData[2]),
-				marker = this.map.createMarker(position),
-				label = this.map.createLabel('<div class="infowindow">' + locationData[0] + '</div>');
+				marker = this.map.addMarker(position),
+				label = this.map.addLabel(position, '<div class="infowindow">' + locationData[0] + '</div>');
+				self = this;
 
-			// Link the label with the marker
-			label.bindTo('position', marker, 'position');
-
-			var self = this;
-			google.maps.event.addListener(marker, 'click', function() { 
+			google.maps.event.addListener(marker, 'click', function() {
 				if (label.map !== null) {
 					label.setMap(null);
 				} else {
