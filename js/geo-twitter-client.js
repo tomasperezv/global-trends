@@ -113,22 +113,17 @@ var GeoTwitterClient = {
 	 * Creates the map.
 	 */
 	_renderMap: function() {
-		this.map = new google.maps.Map(DOM.get('map'), {
-			zoom: 5,
-			mapTypeId: google.maps.MapTypeId.ROADMAP
-		});
+		if (this.map === null) {
+			this.map = new SimpleGoogleMaps({zoom:5});
+			this.map.render(DOM.get('map'));
+		}
 		this._centerMap();
 	},
 
 	_centerMap: function() {
-		var self = this,
-			geocoder = new google.maps.Geocoder();
-
-		geocoder.geocode( { 'address': 'Europe'}, function(results, status) { 
-			if (status == google.maps.GeocoderStatus.OK) {
-				self.map.setCenter(results[0].geometry.location);
-			}
-		});
+		if (this.map !== null) {
+			this.map.center('Europe');
+		}
 	},
 
 	/**
@@ -146,17 +141,13 @@ var GeoTwitterClient = {
 	 */
 	_renderLocation: function(locationData, id) {
 		if (this.map !== null) {
-			// Creates the marker, based on the location data
-			var marker = new google.maps.Marker({
-				position: new google.maps.LatLng(locationData[1], locationData[2]),
-				map: this.map,
-				visible: true
-			});
 
-			var label = new Label({
-				map: this.map,
-				content: '<div class="infowindow">' + locationData[0] + '</div>'
-			});
+			// Creates the marker, based on the location data
+			var position = this.map.getPosition(locationData[1], locationData[2]),
+				marker = this.map.createMarker(position),
+				label = this.map.createLabel('<div class="infowindow">' + locationData[0] + '</div>');
+
+			// Link the label with the marker
 			label.bindTo('position', marker, 'position');
 
 			var self = this;
@@ -164,7 +155,7 @@ var GeoTwitterClient = {
 				if (label.map !== null) {
 					label.setMap(null);
 				} else {
-					label.setMap(self.map);
+					label.setMap(self.map.getGoogleMap());
 				}
 			});
 		}
