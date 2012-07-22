@@ -17,7 +17,7 @@ var GeoTwitterClient = {
 	/**
 	 * @const {Integer} INTERVAL
 	 */
-	INTERVAL: 3000,
+	INTERVAL: 10000,
 
 	/**
 	 * Stores the id's of the tweets that are displayed
@@ -69,7 +69,7 @@ var GeoTwitterClient = {
 				page: self._pageNumber
 			},
 			function(result) {
-				if (typeof result.results !== undefined) {
+				if (typeof result !== undefined) {
 					var locations = self._getLocationsFromTwitterData(result);
 					self._addLocations(locations);
 				}
@@ -88,9 +88,9 @@ var GeoTwitterClient = {
 	 */
 	_getLocationsFromTwitterData: function(twitterData) {
 		var locations = [],
-			nLocations = twitterData.results.length;
+			nLocations = twitterData.length;
 		for (var i = 0; i < nLocations; i++) {
-			var tweet = twitterData.results[i];
+			var tweet = twitterData[i];
 			if ( this._isValidTweet(tweet) ) {
 				console.log('Adding tweet ' + tweet.id);
 				locations.push([tweet.text, tweet.geo.coordinates[0], tweet.geo.coordinates[1], tweet.id]);
@@ -120,6 +120,10 @@ var GeoTwitterClient = {
 			});
 		}
 		this._centerMap();
+		var self = this;
+		this.map.searchByAddress('Stockholm', function(position) {
+			label = self.map.addLabel(position, 'Stockholm');
+		});
 	},
 
 	_centerMap: function() {
@@ -134,7 +138,7 @@ var GeoTwitterClient = {
 	 */
 	_addLocations: function(locations) {
 		for (i = 0; i < locations.length; i++) {
-			this._renderLocation(locations[i], 'marker_' + i);
+			this._renderLocation(locations[i]);
 		}
 	},
 
@@ -147,7 +151,7 @@ var GeoTwitterClient = {
 			// Creates the marker, based on the location data
 			var position = this.map.getPosition(locationData[1], locationData[2]),
 				marker = this.map.addMarker(position),
-				label = this.map.addLabel(position, '<div class="infowindow">' + locationData[0] + '</div>');
+				label = this.map.addLabel(position, locationData[0], 'label_' + locationData[3]);
 				self = this;
 
 			google.maps.event.addListener(marker, 'click', function() {
