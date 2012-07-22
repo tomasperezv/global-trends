@@ -19,20 +19,6 @@ var GeoTwitter = function(config) {
 };
 
 GeoTwitter.prototype = {
-
-	/**
-	 * Instantiate a twitter search client.
-	 * @author tom@0x101.com
-	 * @return {ApiClient}
-	 */
-	_getTwitterSearchClient: function() {
-		var config = {
-			host: this.config['twitter-search-url'],
-			port: 80,
-		};
-		return ApiClientFactory.get(ApiClientTypes.TWITTER_SEARCH, config);
-	},
-
 	/**
 	 * Filter tweets based on user defined parameters.
 	 * @author tom@0x101.com
@@ -41,8 +27,8 @@ GeoTwitter.prototype = {
 	 */
 	filterTweets: function(callback, params) {
 		params.maxTweets = this.config['twitter-max-tweets'];
-		var twitterSearchClient = this._getTwitterSearchClient();
-		twitterSearchClient.search(params, callback);
+		var twitterStreamClient = ApiClientFactory.get(ApiClientTypes.TWITTER_STREAM, this.config);
+		twitterStreamClient.search(params, callback);
 	}
 };
 
