@@ -30,7 +30,7 @@ var geoTwitter = require('../geo-twitter.js')(mockConfig);
 // Test a simple request
 var params = {
 	type_and: false,
-	filters: 'spain crisis'
+	filters: 'twitter test'
 };
 
 geoTwitter.filterTweets(function(result){
