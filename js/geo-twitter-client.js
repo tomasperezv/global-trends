@@ -10,14 +10,9 @@ var GeoTwitterClient = {
 	map: null,
 
 	/**
-	 * @var {Integer} intervalId
+	 * @var {WebSocket} websocket
 	 */
-	intervalId: null,
-
-	/**
-	 * @const {Integer} INTERVAL
-	 */
-	INTERVAL: 10000,
+	websocket: null,
 
 	/**
 	 * Stores the id's of the tweets that are displayed
@@ -26,30 +21,22 @@ var GeoTwitterClient = {
 	_tweets: [],
 
 	/**
-	 * @var {Integer} _pageNumber
+	 * @var PROTOCOL Used to define the websocket protocol identifier.
 	 */
-	_pageNumber: 1,
-
-	/**
-	 * @const {Integer} MAX_PAGE
-	 */
-	MAX_PAGE: 15,
+	PROTOCOL: 'blackbriar-0.1',
 
 	init: function() {
 		this._renderMap();
-		AjaxEngine.appUrl = 'http://api.tomasperez.com:9000/';
 	},
 
 	start: function() {
-		if (this.intervalId === null) {
-			this.intervalId = window.setInterval(this._retrieveData, this.INTERVAL);
-		}
+		this._retrieveData();
 	},
 
 	stop: function() {
-		if (this.intervalId !== null) {
-			clearInterval(this.intervalId);
-			this.intervalId = null;
+		if (this.websocket !== null) {
+			this.websocket.close();
+			this.websocket = null;
 		}
 	},
 
@@ -59,27 +46,28 @@ var GeoTwitterClient = {
 	_retrieveData: function() {
 		var self = GeoTwitterClient;
 
-		self._pageNumber++;
-
-		AjaxEngine.post(
-			'filterTweets',
-			{	filters: DOM.get('filters').value,
-				type_and: DOM.get('type_and').checked,
-				type_or: DOM.get('type_or').checked,
-				page: self._pageNumber
-			},
-			function(result) {
-				if (typeof result !== undefined) {
-					var locations = self._getLocationsFromTwitterData(result);
-					self._addLocations(locations);
-				}
-			}
-		);
-
-		// We reach the limit, don't perform more requests
-		if (self._pageNumber == self.MAX_PAGE) {
-			self.stop();
+		// TODO: the uri needs to be generated.
+		if (this.websocket === null) {
+			this.websocket = new WebSocket('ws://geo-twitter.tomasperez.com:9000/', this.PROTOCOL);
 		}
+
+		this.websocket.onopen = function(event) {
+			var params = {
+				url: "/filterTweets",
+				filters: DOM.get('filters').value,
+				type_and: DOM.get('type_and').checked,
+				type_or: DOM.get('type_or').checked
+			};
+			self.websocket.send(JSON.stringify(params));
+		};
+
+		this.websocket.onmessage = function(message) {
+			self._getLocationsFromTwitterData(JSON.parse(message.data));
+		};
+
+		this.websocket.onclose = function() {
+			console.log('closing websocket');
+		};
 
 	},
 
@@ -87,18 +75,21 @@ var GeoTwitterClient = {
 	 * @param {Object} twitterData
 	 */
 	_getLocationsFromTwitterData: function(twitterData) {
-		var locations = [],
-			nLocations = twitterData.length;
+			var nLocations = twitterData.length,
+			self = this;
 		for (var i = 0; i < nLocations; i++) {
 			var tweet = twitterData[i];
 			if ( this._isValidTweet(tweet) ) {
 				console.log('Adding tweet ' + tweet.id);
-				locations.push([tweet.text, tweet.geo.coordinates[0], tweet.geo.coordinates[1], tweet.id]);
+
+				self._renderLocation([tweet.text, tweet.geo.coordinates[0], tweet.geo.coordinates[1], tweet.id]);
 				// Mark the tweet as displayed
 				this._tweets[tweet.id] = true;
 			}
 		}
-		return locations;
+		if (this._tweets.length > 100) {
+			this.websocket.close();
+		}
 	},
 
 	/**
@@ -129,16 +120,6 @@ var GeoTwitterClient = {
 	_centerMap: function() {
 		if (this.map !== null) {
 			this.map.center('Europe');
-		}
-	},
-
-	/**
-	 * Add locations data, creating new markers.
-	 * @param {Array} locations
-	 */
-	_addLocations: function(locations) {
-		for (i = 0; i < locations.length; i++) {
-			this._renderLocation(locations[i]);
 		}
 	},
 
