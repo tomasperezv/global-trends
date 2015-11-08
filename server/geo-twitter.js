@@ -11,8 +11,8 @@
  * Public Domain.
  * No warranty expressed or implied. Use at your own risk.
  */
-var ApiClientFactory = require('./node-api-client/api-client').ApiClientFactory,
-  ApiClientTypes = require('./node-api-client/api-client').Types;
+var ApiClientFactory = require('../../node-api-client/api-client').ApiClientFactory,
+  ApiClientTypes = require('../../node-api-client/api-client').Types;
 
 var GeoTwitter = function(config) {
   this.config = config;
